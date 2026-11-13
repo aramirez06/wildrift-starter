@@ -6,7 +6,9 @@ Open `index.html` in a browser to see the site.
 
 | File | What it is | Who edits it |
 |---|---|---|
-| `index.html` | The page: layout, styling and the ranking rules | You |
+| `index.html` | The page: the layout and the list of files to load | You |
+| `styles.css` | Styling: colors, fonts and spacing | You |
+| `app.js` | The ranking rules and the code that draws the page | You |
 | `content.js` | Builds and patch notes | You |
 | `stats.js` | Win, pick and ban rates | The update script |
 | `scripts/update-stats.mjs` | Downloads today's numbers and rewrites `stats.js` | You, rarely |

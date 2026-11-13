@@ -1,0 +1,151 @@
+/* ---------- 1. Design tokens: change colors and fonts here ---------- */
+/* Layout idea: tier rows on the left, the selected champion's page on the right. */
+:root {
+  --bg: #eef2f5;
+  --surface: #ffffff;
+  --ink: #14222e;
+  --muted: #566775;
+  --line: #d3dce3;
+  --accent: #0b6f79;
+  --tier-s: #e6b84a;
+  --tier-a: #62c6cd;
+  --tier-b: #a3bce2;
+  --tier-c: #c5cdd4;
+  --on-tier: #14222e;
+  --up: #17783f;
+  --down: #b83227;
+  --font-display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f1a22;
+    --surface: #17252f;
+    --ink: #e6edf2;
+    --muted: #96a7b4;
+    --line: #2b3d49;
+    --accent: #4fc8d1;
+    --tier-s: #dfae45;
+    --tier-a: #47b5bd;
+    --tier-b: #7d9fd3;
+    --tier-c: #8996a1;
+    --on-tier: #0f1a22;
+    --up: #55c990;
+    --down: #f07a6c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1a22;
+  --surface: #17252f;
+  --ink: #e6edf2;
+  --muted: #96a7b4;
+  --line: #2b3d49;
+  --accent: #4fc8d1;
+  --tier-s: #dfae45;
+  --tier-a: #47b5bd;
+  --tier-b: #7d9fd3;
+  --tier-c: #8996a1;
+  --on-tier: #0f1a22;
+  --up: #55c990;
+  --down: #f07a6c;
+}
+
+/* ---------- 2. Page basics ---------- */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.page { max-width: 1080px; margin: 0 auto; padding: 28px 20px 48px; display: grid; gap: 24px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: 2.4rem; letter-spacing: 0.01em; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1rem; font-family: var(--font-body); font-weight: 600; }
+p { margin: 0; }
+code { font-size: 0.9em; background: var(--line); padding: 1px 5px; border-radius: 4px; }
+.muted { color: var(--muted); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- 3. Header and controls ---------- */
+.top { display: flex; flex-wrap: wrap; gap: 16px 32px; justify-content: space-between; align-items: flex-end; }
+.top .intro { display: grid; gap: 6px; max-width: 62ch; }
+.flag {
+  justify-self: start; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--on-tier); background: var(--tier-s); padding: 2px 8px; border-radius: 4px;
+}
+.rank-pick { display: grid; gap: 4px; font-size: 0.85rem; font-weight: 600; }
+select {
+  font: inherit; font-weight: 500; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 180px;
+}
+.roles { display: flex; flex-wrap: wrap; gap: 8px; }
+.roles button {
+  font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 14px;
+}
+.roles button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+/* ---------- 4. Tier list ---------- */
+.layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.tiers { display: grid; gap: 10px; }
+.tier { display: grid; grid-template-columns: 52px minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.tier-badge { display: grid; place-items: center; font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; color: var(--on-tier); }
+.tier-s { background: var(--tier-s); }
+.tier-a { background: var(--tier-a); }
+.tier-b { background: var(--tier-b); }
+.tier-c { background: var(--tier-c); }
+.tier-champs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; min-height: 64px; align-items: center; }
+.champ {
+  font: inherit; text-align: left; cursor: pointer; color: var(--ink);
+  display: grid; grid-template-columns: auto auto; gap: 0 8px; align-items: center;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px 6px 6px;
+}
+.champ:hover { border-color: var(--accent); }
+.champ[aria-current="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.avatar {
+  grid-row: span 2; width: 36px; height: 36px; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+}
+.champ-name { font-weight: 600; font-size: 0.95rem; line-height: 1.2; }
+.champ-meta { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.move-up { color: var(--up); font-weight: 600; }
+.move-down { color: var(--down); font-weight: 600; }
+
+/* ---------- 5. Champion page ---------- */
+.detail { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 16px; position: sticky; top: 16px; }
+.detail-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.pill { font-size: 0.8rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); }
+.pill.tier-s, .pill.tier-a, .pill.tier-b, .pill.tier-c { color: var(--on-tier); border-color: transparent; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--bg); border-radius: 6px; padding: 8px 10px; }
+.stat b { display: block; font-family: var(--font-display); font-size: 1.5rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 0.8rem; color: var(--muted); }
+.build { display: grid; gap: 10px; }
+.build ol { margin: 4px 0 0; padding-left: 20px; }
+.build dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; font-size: 0.95rem; }
+.build dt { color: var(--muted); }
+.build dd { margin: 0; }
+.change { border-left: 4px solid var(--line); padding: 2px 0 2px 10px; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.change.buff { border-color: var(--up); }
+.change.nerf { border-color: var(--down); }
+
+/* ---------- 6. Lower cards ---------- */
+.lower { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 10px; }
+.card ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.formula { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; background: var(--bg); border-radius: 6px; padding: 10px; overflow-x: auto; white-space: nowrap; }
+footer { font-size: 0.85rem; color: var(--muted); max-width: 70ch; }
+
+@media (max-width: 760px) {
+  h1 { font-size: 2rem; }
+  .layout, .lower { grid-template-columns: minmax(0, 1fr); }
+  .detail { position: static; }
+}
