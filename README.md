@@ -11,7 +11,9 @@ Open `index.html` in a browser to see the site.
 | `app.js` | The ranking rules and the code that draws the page | You |
 | `content.js` | Builds and patch notes | You |
 | `stats.js` | Win, pick and ban rates | The update script |
+| `icons.js` | Where to find the rune, spell and ability pictures | The icon script |
 | `scripts/update-stats.mjs` | Downloads today's numbers and rewrites `stats.js` | You, rarely |
+| `scripts/update-icons.mjs` | Looks up the rune, spell and ability pictures and rewrites `icons.js` | You, rarely |
 | `history/` | One dated copy of the numbers per run | The update script |
 | `.github/workflows/update-stats.yml` | Runs the script daily once the project is on GitHub | Nobody |
 
@@ -22,11 +24,21 @@ Open `index.html` in a browser to see the site.
 3. Run `node scripts/update-stats.mjs`
 4. Reload `index.html`.
 
+## Updating the pictures
+
+Run `node scripts/update-icons.mjs` after a game patch that adds a champion or changes
+the runes. The daily GitHub run doesn't do this, because the pictures rarely change.
+
 ## About the data
 
 The numbers are ranked-game statistics from the Wild Rift China server, published by
 Tencent. They describe Chinese players, so other regions may differ. Tencent doesn't
 document this data for outside use and could change or remove it, so check their terms
 before you build a public site on it.
+
+The pictures are not stored in this project. The page loads them from Tencent's
+servers, using addresses the scripts save in `stats.js` (champion portraits) and
+`icons.js` (runes, spells and abilities). If a portrait can't load, the champion's
+initials show instead; the other pictures are simply left out.
 
 This project isn't endorsed by Riot Games.

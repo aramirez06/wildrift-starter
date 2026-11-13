@@ -45,6 +45,39 @@ function previousStats(rankKey, r) {
 function initials(name) {
   return name.replace(/[^A-Za-z]/g, "").slice(0, 2);
 }
+// The square next to a champion's name: the portrait if stats.js has one,
+// with the initials underneath in case the picture doesn't load.
+function avatar(c, extraClass) {
+  const src = STATS.images && STATS.images[c.id];
+  return '<span class="avatar' + (extraClass ? " " + extraClass : "") + '" aria-hidden="true">' + esc(initials(c.name)) +
+    (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()">' : "") +
+    "</span>";
+}
+// icons.js is written by scripts/update-icons.mjs. The page still works without it.
+const PICTURES = typeof ICONS === "undefined" ? { runes: {}, spells: {}, skills: {} } : ICONS;
+
+// A small picture, or nothing if we have no address for it.
+function icon(src, extraClass) {
+  return src
+    ? '<img class="icon' + (extraClass ? " " + extraClass : "") + '" src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()">'
+    : "";
+}
+function runeHtml(name, extraClass) {
+  return '<span class="with-icon">' + icon(PICTURES.runes[name], extraClass) + esc(name) + "</span>";
+}
+// A spell can carry a note, like "Smite (Ignite in the Baron lane)". The picture is for the first word.
+function spellHtml(text) {
+  const name = String(text).split(" (")[0];
+  return '<span class="with-icon">' + icon(PICTURES.spells[name]) + esc(text) + "</span>";
+}
+// Turns "3 > 1 > 2" into the three ability pictures, each with its number.
+function skillOrderHtml(order, champId) {
+  const pictures = PICTURES.skills[champId] || [];
+  return '<span class="skill-order">' + String(order).split(">").map(function (part) {
+    const number = part.trim();
+    return '<span class="with-icon">' + icon(pictures[Number(number)]) + esc(number) + "</span>";
+  }).join('<span class="muted" aria-hidden="true">›</span>') + "</span>";
+}
 // Makes text safe to put inside HTML.
 function esc(text) {
   return String(text).replace(/[&<>"]/g, function (c) {
@@ -89,7 +122,7 @@ function render() {
     });
     const chips = inTier.map(function (r) {
       return '<button type="button" class="champ" data-champ="' + r.key + '" aria-current="' + (r.key === state.champ) + '">' +
-        '<span class="avatar" aria-hidden="true">' + esc(initials(r.data.name)) + "</span>" +
+        avatar(r.data) +
         '<span class="champ-name">' + esc(r.data.name) + "</span>" +
         '<span class="champ-meta">' + (state.role === "All" ? r.data.lane + " · " : "") + r.data.win.toFixed(1) + "%" + movement(r) + "</span>" +
         "</button>";
@@ -109,6 +142,7 @@ function render() {
   const diff = before ? c.win - before.win : 0;
   document.getElementById("detail").innerHTML =
     '<div class="detail-head">' +
+      avatar(c, "avatar-large") +
       "<h2>" + esc(c.name) + "</h2>" +
       '<span class="pill">' + c.lane + "</span>" +
       '<span class="pill tier-' + tier.toLowerCase() + '">Tier ' + tier + "</span>" +
@@ -127,9 +161,12 @@ function render() {
       (build
         ? "<div><h3>Core items</h3><ol>" + build.items.map(function (i) { return "<li>" + esc(i) + "</li>"; }).join("") + "</ol></div>" +
           "<dl>" +
-            "<dt>Keystone rune</dt><dd>" + esc(build.rune) + "</dd>" +
-            "<dt>Spells</dt><dd>" + esc(build.spells.join(", ")) + "</dd>" +
-            "<dt>Skill order</dt><dd>" + esc(build.skillOrder) + "</dd>" +
+            "<dt>Keystone rune</dt><dd>" + runeHtml(build.rune, "icon-large") + "</dd>" +
+            (build.runes && build.runes.length
+              ? "<dt>Other runes</dt><dd class=\"stack\">" + build.runes.map(function (r) { return runeHtml(r); }).join("") + "</dd>"
+              : "") +
+            "<dt>Spells</dt><dd class=\"stack\">" + build.spells.map(spellHtml).join("") + "</dd>" +
+            "<dt>Skill order</dt><dd>" + skillOrderHtml(build.skillOrder, c.id) + "</dd>" +
           "</dl>"
         : '<h3>Build</h3><p class="muted">No build written yet. Add one under <code>' + c.id + "</code> in <code>content.js</code>.</p>") +
     "</div>";
@@ -155,8 +192,7 @@ function render() {
     '<p class="formula">score = (win − 50) × ' + WEIGHTS.win + " + pick × " + WEIGHTS.pick + " + ban × " + WEIGHTS.ban + "</p>" +
     "<ul>" + TIERS.map(function (t, i) {
       return "<li>Tier " + t.name + ": " + (t.min === -Infinity ? "score below " + TIERS[i - 1].min : "score " + t.min + " or higher") + "</li>";
-    }).join("") + "</ul>" +
-    '<p class="muted">Change the rules at the top of <code>app.js</code>, then reload.</p>';
+    }).join("") + "</ul>";
 }
 
 /* ---------- E. Reacting to clicks ---------- */

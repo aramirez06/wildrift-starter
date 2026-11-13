@@ -7,7 +7,8 @@
 
   What it does:
   1. Downloads win / pick / ban rates (China server, published by Tencent).
-  2. Downloads the champion list, to turn champion numbers into names.
+  2. Downloads the champion list, to turn champion numbers into names and
+     to find each champion's portrait.
   3. Writes stats.js (read by index.html) and a dated copy in history/.
   If anything looks wrong it stops and leaves your existing stats.js untouched.
 */
@@ -40,7 +41,7 @@ const NAME_FIXES = {
   Ksante: "K'Sante"
 };
 
-function englishName(hero) {
+export function englishName(hero) {
   const file = String(hero.poster || "").split("/").pop() || "";
   const stem = file.replace(/_\d+\.\w+$/, "").replace(/[^A-Za-z]/g, "");
   if (!stem) return null;
@@ -48,6 +49,13 @@ function englishName(hero) {
     id: stem.toLowerCase(),
     name: NAME_FIXES[stem] || stem.replace(/([a-z])([A-Z])/g, "$1 $2")
   };
+}
+
+// The address of the champion's square portrait, if it looks the way we expect.
+// The pictures stay on Tencent's servers; the site only links to them.
+function portrait(hero) {
+  const url = String(hero.avatar || "");
+  return /^https:\/\/game\.gtimg\.cn\/[\w\/.-]+\.(png|jpg)$/.test(url) ? url : null;
 }
 
 // Reads one rate as a percentage, e.g. 53.12
@@ -76,6 +84,7 @@ export function buildStats(rankJson, heroJson, old) {
   const heroes = (heroJson && heroJson.heroList) || {};
   const rows = {};
   const ranks = {};
+  const images = {};
   const unknown = new Set();
   let date = null;
   let total = 0;
@@ -96,6 +105,8 @@ export function buildStats(rankJson, heroJson, old) {
         const d = String(entry.dtstatdate || "");
         if (!date && /^\d{8}$/.test(d)) date = d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6);
         list.push({ id: names.id, name: names.name, lane, win, pick, ban });
+        const image = portrait(hero);
+        if (image) images[names.id] = image;
       }
     }
     if (list.length) {
@@ -119,6 +130,7 @@ export function buildStats(rankJson, heroJson, old) {
       date,
       source: "Wild Rift China server ranked games, published by Tencent",
       ranks,
+      images,
       rows,
       previous
     },
