@@ -54,7 +54,9 @@ function avatar(c, extraClass) {
     "</span>";
 }
 // icons.js is written by scripts/update-icons.mjs. The page still works without it.
-const PICTURES = typeof ICONS === "undefined" ? { runes: {}, spells: {}, skills: {} } : ICONS;
+const PICTURES = typeof ICONS === "undefined" ? { runes: {}, spells: {}, skills: {}, skillText: {} } : ICONS;
+// Rune and spell descriptions are written by hand in content.js.
+const DESCRIPTIONS = CONTENT.descriptions || {};
 
 // A small picture, or nothing if we have no address for it.
 function icon(src, extraClass) {
@@ -62,20 +64,33 @@ function icon(src, extraClass) {
     ? '<img class="icon' + (extraClass ? " " + extraClass : "") + '" src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()">'
     : "";
 }
-function runeHtml(name, extraClass) {
-  return '<span class="with-icon">' + icon(PICTURES.runes[name], extraClass) + esc(name) + "</span>";
+// Wraps a picture and its label so that pointing at it (or tabbing to it) pops up a description.
+function withTip(inner, title, text) {
+  if (!text) return '<span class="with-icon">' + inner + "</span>";
+  return '<span class="with-icon has-tip" tabindex="0" data-tip-title="' + esc(title) + '" data-tip="' + esc(text) + '">' + inner + "</span>";
 }
-// A spell can carry a note, like "Smite (Ignite in the Baron lane)". The picture is for the first word.
+function runeHtml(name, extraClass) {
+  return withTip(icon(PICTURES.runes[name], extraClass) + esc(name), name, (DESCRIPTIONS.runes || {})[name]);
+}
+// A spell can carry a note, like "Smite (Ignite in the Baron lane)". The picture and description are for the first word.
 function spellHtml(text) {
   const name = String(text).split(" (")[0];
-  return '<span class="with-icon">' + icon(PICTURES.spells[name]) + esc(text) + "</span>";
+  return withTip(icon(PICTURES.spells[name]) + esc(text), name, (DESCRIPTIONS.spells || {})[name]);
+}
+// Ability names sometimes arrive in capitals ("GOLDEN STAFF"); this makes them "Golden Staff".
+function tidyName(name) {
+  if (name !== name.toUpperCase()) return name;
+  return name.toLowerCase().replace(/(^|[\s\/-])([a-z])/g, function (all, before, letter) { return before + letter.toUpperCase(); });
 }
 // Turns "3 > 1 > 2" into the three ability pictures, each with its number.
 function skillOrderHtml(order, champId) {
   const pictures = PICTURES.skills[champId] || [];
+  const texts = (PICTURES.skillText || {})[champId] || [];
   return '<span class="skill-order">' + String(order).split(">").map(function (part) {
     const number = part.trim();
-    return '<span class="with-icon">' + icon(pictures[Number(number)]) + esc(number) + "</span>";
+    const ability = texts[Number(number)];
+    return withTip(icon(pictures[Number(number)]) + esc(number),
+      ability ? "Ability " + number + ": " + tidyName(ability.name) : "", ability && ability.text);
   }).join('<span class="muted" aria-hidden="true">›</span>') + "</span>";
 }
 // Makes text safe to put inside HTML.
@@ -231,3 +246,56 @@ window.addEventListener("hashchange", function () { readHash(); render(); });
 
 readHash();
 render();
+
+/* ---------- F. Description pop-ups ---------- */
+// One pop-up box is reused for every rune, spell and ability. It appears when the
+// visitor points at something with a description, tabs to it, or taps it.
+const tipBox = document.createElement("div");
+tipBox.className = "tip";
+tipBox.id = "tip";
+tipBox.setAttribute("role", "tooltip");
+tipBox.hidden = true;
+document.body.appendChild(tipBox);
+let tipTarget = null;
+
+function showTip(target) {
+  tipTarget = target;
+  tipBox.innerHTML = "<strong>" + esc(target.dataset.tipTitle) + "</strong>" + esc(target.dataset.tip);
+  tipBox.hidden = false;
+  target.setAttribute("aria-describedby", "tip");
+  // Place it just under the item, kept inside the window; above it if there's no room below.
+  const at = target.getBoundingClientRect();
+  const box = tipBox.getBoundingClientRect();
+  const left = Math.max(8, Math.min(at.left, window.innerWidth - box.width - 8));
+  const below = at.bottom + 6;
+  const top = below + box.height > window.innerHeight - 8 && at.top - box.height - 6 > 8 ? at.top - box.height - 6 : below;
+  tipBox.style.left = left + "px";
+  tipBox.style.top = top + "px";
+}
+function hideTip() {
+  if (tipTarget) tipTarget.removeAttribute("aria-describedby");
+  tipTarget = null;
+  tipBox.hidden = true;
+}
+function tipFor(event) {
+  return event.target.closest ? event.target.closest(".has-tip") : null;
+}
+
+const detailPanel = document.getElementById("detail");
+detailPanel.addEventListener("mouseover", function (event) {
+  const target = tipFor(event);
+  if (target && target !== tipTarget) showTip(target);
+});
+detailPanel.addEventListener("mouseout", function (event) {
+  const target = tipFor(event);
+  if (target && !target.contains(event.relatedTarget)) hideTip();
+});
+detailPanel.addEventListener("focusin", function (event) {
+  const target = tipFor(event);
+  if (target) showTip(target);
+});
+detailPanel.addEventListener("focusout", hideTip);
+window.addEventListener("scroll", hideTip, true);
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") hideTip();
+});

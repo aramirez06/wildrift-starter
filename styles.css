@@ -143,6 +143,14 @@ select {
 .icon { width: 26px; height: 26px; flex: none; border-radius: 6px; background: #14222e; object-fit: cover; }
 .icon-large { width: 36px; height: 36px; }
 .skill-order { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Things that pop up a description when pointed at */
+.has-tip { cursor: help; border-radius: 6px; }
+.tip {
+  position: fixed; z-index: 10; width: max-content; max-width: min(300px, calc(100vw - 16px));
+  background: var(--ink); color: var(--bg); border-radius: 8px; padding: 10px 12px;
+  font-size: 0.85rem; line-height: 1.4; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); pointer-events: none;
+}
+.tip strong { display: block; margin-bottom: 2px; font-size: 0.9rem; }
 .change { border-left: 4px solid var(--line); padding: 2px 0 2px 10px; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
 .change.buff { border-color: var(--up); }
 .change.nerf { border-color: var(--down); }
